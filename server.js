@@ -109,7 +109,7 @@ app.post("/chat", async (req, res) => {
       temperature: 1,
       max_completion_tokens: 1024,
       top_p: 1,
-      stream: false, // Disable streaming if not supported
+      stream: true, // Disable streaming if not supported
       stop: null,
     });
 
