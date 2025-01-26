@@ -49,7 +49,7 @@ app.post("/chat", async (req, res) => {
           role: "system",
           content:
             "Thank you for sharing that. Do you believe the other driver was fully responsible for the accident?",
-        },
+        }
       ],
       model: "llama-3.1-8b-instant",
       temperature: 1,
