@@ -90,6 +90,7 @@
       userInput.focus();
 
       try {
+        // Initiate the fetch request for streaming
         const response = await fetch('https://chatbot-backend-kpiy.onrender.com/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -100,16 +101,21 @@
           throw new Error(`Server error: ${response.status}`);
         }
 
+        // Read the streaming response
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let botMessage = '';
+
+        // Add an initial message element for streaming updates
+        let botMessageDiv = addMessage('bot', '');
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
+          // Decode the chunk and append it to the botMessage
           botMessage += decoder.decode(value, { stream: true });
-          updateBotMessage(botMessage);
+          botMessageDiv.textContent = botMessage; // Update the message element incrementally
         }
       } catch (error) {
         console.error('Error:', error);
@@ -123,15 +129,7 @@
       messageDiv.textContent = text;
       messagesDiv.appendChild(messageDiv);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    function updateBotMessage(botMessage) {
-      const botMessageDiv = messagesDiv.querySelector('.bot:last-child');
-      if (botMessageDiv) {
-        botMessageDiv.textContent = botMessage;
-      } else {
-        addMessage('bot', botMessage);
-      }
+      return messageDiv; // Return the message element for updates
     }
   </script>
 </body>
