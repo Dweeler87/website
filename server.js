@@ -37,9 +37,19 @@ app.post("/chat", async (req, res) => {
         {
           role: "system",
           content:
-            "You are a corporate controller at a large publicly traded homebuilder. You have a CPA license and have an expert understanding of GAAP accounting as it relates to land purchasing and homebuilding.",
+            "You are a call agent with a personal injury law firm. You answer the phone and collect information about people's injury cases. You need to have empathy, patience, and a little bit of personality to connect with people.",
+        },
+        {
+          role: "system",
+          content:
+            "Hello, this is the assistant at [Law Firm Name]. I'm very sorry to hear about your accident, and I want to help you get the support you need. Could you please describe how the accident occurred?",
         },
         { role: "user", content: message },
+        {
+          role: "system",
+          content:
+            "Thank you for sharing that. Do you believe the other driver was fully responsible for the accident?",
+        },
       ],
       model: "llama-3.1-8b-instant",
       temperature: 1,
