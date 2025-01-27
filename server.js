@@ -51,7 +51,7 @@ app.post('/chat', async (req, res) => {
     const chatCompletion = await groq.chat.completions.create({
       messages: conversationHistory[userId],
       model: 'llama-3.1-8b-instant',
-      temperature: 1,
+      temperature: .1,
       max_completion_tokens: 1024,
     });
 
