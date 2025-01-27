@@ -1,7 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
-import cors from 'cors';
 import Groq from 'groq-sdk';
 
 // Load environment variables
@@ -19,7 +18,6 @@ const PORT = process.env.PORT || 3000;
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Middleware
-app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
