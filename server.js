@@ -1,7 +1,8 @@
-import Groq from "groq-sdk";
-import express from "express";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
+import express from 'express';
+import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import Groq from 'groq-sdk';
 
 // Load environment variables
 dotenv.config();
@@ -14,73 +15,62 @@ if (!process.env.GROQ_API_KEY) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Groq SDK with the API key
+// Initialize Groq SDK
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Middleware to parse JSON requests
+// Middleware
+app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static("public"));
 
-// Serve static files from the "public_html" folder
-app.use(express.static("public_html"));
+// In-memory storage for conversation history (per session or user ID)
+const conversationHistory = {}; // Key: userId, Value: messages array
 
-// Handle chat requests
-app.post("/chat", async (req, res) => {
-  const { message } = req.body;
+// Chat endpoint
+app.post('/chat', async (req, res) => {
+  const { message, userId } = req.body;
 
-  if (!message) {
-    return res.status(400).json({ error: "Message is required." });
+  if (!message || !userId) {
+    return res.status(400).json({ error: 'Message and userId are required.' });
+  }
+
+  // Initialize conversation history for the user if not already set
+  if (!conversationHistory[userId]) {
+    conversationHistory[userId] = [
+      {
+        role: "system",
+        content:
+          "You are a chatbot agent with a personal injury law firm. You answer questions and collect information about people's injury cases. You need to have empathy, patience, and a little bit of personality to connect with people. I need to gather details about the accident, insurance, responsible party, medical treatments, medical assessments, medical follow-ups, and daily life impacts.",
+      },
+    ];
   }
 
   try {
-    // Set headers for streaming response
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
+    // Add the user's message to the conversation history
+    conversationHistory[userId].push({ role: "user", content: message });
 
-    // Call the Groq API with streaming enabled
+    // Call the Groq API with the updated conversation history
     const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a chatbot agent with a personal injury law firm. You answer questions and collect information about people's injury cases. You need to have empathy, patience, and a little bit of personality to connect with people. I need to gather details about the accident, insurance, responsible party, medical treatments, medical assessments, medical follow-ups, and daily life impacts.",
-        },
-        { role: "user", content: message },
-      ],
-      model: "llama-3.1-8b-instant",
+      messages: conversationHistory[userId],
+      model: 'llama-3.1-8b-instant',
       temperature: 1,
       max_completion_tokens: 1024,
-      top_p: 1,
-      stream: true, // Enable streaming
     });
 
-    // Process the streamed response
-    const reader = chatCompletion.body.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
+    const botResponse = chatCompletion.choices[0]?.message?.content || "No response from the chatbot.";
+    console.log(`Bot response for user ${userId}: ${botResponse}`);
 
-    while (!done) {
-      const { value, done: readerDone } = await reader.read();
-      done = readerDone;
+    // Add the bot's response to the conversation history
+    conversationHistory[userId].push({ role: "assistant", content: botResponse });
 
-      if (value) {
-        const chunk = decoder.decode(value, { stream: true });
-        res.write(chunk); // Send the chunk to the client
-      }
-    }
-
-    res.end(); // End the streaming response
+    res.json({ response: botResponse });
   } catch (error) {
-    console.error("Error with Groq API:", error.message || error);
-
-    // Handle errors gracefully
-    if (!res.headersSent) {
-      res.status(500).json({ error: "Internal server error. Please try again later." });
-    }
+    console.error("Error in /chat endpoint:", error.message || error);
+    res.status(500).json({ error: 'Internal server error. Please try again later.' });
   }
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
