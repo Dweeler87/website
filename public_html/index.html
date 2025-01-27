@@ -82,6 +82,14 @@
     const userInput = document.getElementById('user-input');
     const userId = "user-123"; // Replace with a dynamically generated or persistent user ID
 
+    // Add event listener for the Enter key
+    userInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        sendMessage();
+        event.preventDefault(); // Prevents default behavior like adding a newline
+      }
+    });
+
     async function sendMessage() {
       const userMessage = userInput.value.trim();
       if (!userMessage) return;
