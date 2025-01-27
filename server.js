@@ -19,7 +19,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Middleware
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static("public_html"));
 
 // In-memory storage for conversation history (per session or user ID)
 const conversationHistory = {}; // Key: userId, Value: messages array
